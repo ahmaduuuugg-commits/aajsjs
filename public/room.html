@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 RHL TOURNAMENT - Room Link</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        
+        .room-info {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        
+        .room-link {
+            font-size: 1.1rem;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            word-break: break-all;
+        }
+        
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .copy-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .join-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .join-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        
+        .status.active {
+            background: rgba(40, 167, 69, 0.3);
+            border: 2px solid #28a745;
+        }
+        
+        .status.inactive {
+            background: rgba(220, 53, 69, 0.3);
+            border: 2px solid #dc3545;
+        }
+        
+        .players-count {
+            font-size: 1.5rem;
+            margin: 15px 0;
+        }
+        
+        .loading {
+            opacity: 0.6;
+        }
+        
+        .error {
+            background: rgba(220, 53, 69, 0.3);
+            border: 2px solid #dc3545;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        
+        .refresh-btn {
+            background: #ffc107;
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            font-weight: bold;
+        }
+        
+        .refresh-btn:hover {
+            background: #e0a800;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .room-link {
+                font-size: 0.9rem;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 RHL TOURNAMENT</h1>
+        <p class="subtitle">Always the Same Room - No Multiple Rooms!</p>
+        
+        <div id="roomInfo" class="room-info loading">
+            <p>🔄 Loading room information...</p>
+        </div>
+        
+        <button class="refresh-btn" onclick="loadRoomInfo()">🔄 Refresh</button>
+    </div>
+
+    <script>
+        let currentRoomLink = '';
+        
+        async function loadRoomInfo() {
+            const roomInfo = document.getElementById('roomInfo');
+            roomInfo.classList.add('loading');
+            
+            try {
+                const response = await fetch('/api/room-link');
+                const data = await response.json();
+                
+                if (data.error) {
+                    roomInfo.innerHTML = `
+                        <div class="error">
+                            <h3>❌ Room Not Available</h3>
+                            <p>${data.error}</p>
+                            <p>Please wait for the room to be created...</p>
+                        </div>
+                    `;
+                } else {
+                    currentRoomLink = data.link;
+                    
+                    roomInfo.innerHTML = `
+                        <div class="status ${data.status === 'active' ? 'active' : 'inactive'}">
+                            <h3>🎮 Room Status: ${data.status === 'active' ? '✅ ACTIVE' : '⚠️ Starting'}</h3>
+                            ${data.isPermanent ? '<p>🔒 <strong>PERMANENT ROOM - Always the same!</strong></p>' : ''}
+                        </div>
+                        
+                        <div class="players-count">
+                            👥 Players Online: <strong>${data.players || 0}</strong>
+                        </div>
+                        
+                        <h3>🔗 Room Link:</h3>
+                        <div class="room-link" id="roomLink">${data.link}</div>
+                        
+                        <div>
+                            <button class="copy-btn" onclick="copyLink()">📋 Copy Link</button>
+                            <a href="${data.link}" target="_blank" class="join-btn">🎮 Join Game</a>
+                        </div>
+                        
+                        <p style="margin-top: 20px; opacity: 0.8;">
+                            📢 <strong>Important:</strong> This is the ONLY room link. 
+                            Everyone should use this EXACT link to play together!
+                        </p>
+                        
+                        ${data.roomId ? `<p style="opacity: 0.7;">Room ID: ${data.roomId}</p>` : ''}
+                    `;
+                }
+                
+                roomInfo.classList.remove('loading');
+                
+            } catch (error) {
+                roomInfo.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Error Loading Room</h3>
+                        <p>Failed to connect to server: ${error.message}</p>
+                    </div>
+                `;
+                roomInfo.classList.remove('loading');
+            }
+        }
+        
+        function copyLink() {
+            if (currentRoomLink) {
+                navigator.clipboard.writeText(currentRoomLink).then(() => {
+                    const btn = event.target;
+                    const originalText = btn.textContent;
+                    btn.textContent = '✅ Copied!';
+                    btn.style.background = '#28a745';
+                    
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.style.background = '#28a745';
+                    }, 2000);
+                }).catch(err => {
+                    alert('Copy failed. Please copy manually: ' + currentRoomLink);
+                });
+            }
+        }
+        
+        // Load room info on page load
+        loadRoomInfo();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadRoomInfo, 30000);
+    </script>
+</body>
+</html>
